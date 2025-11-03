@@ -1,0 +1,651 @@
+# Initialement fait par William
+# Modifications mineures par  Alain
+#    changer le servers:url pour alaindube.com
+openapi: 3.0.0
+info:
+  title: Pirates API
+  version: 1.0.0
+servers:
+  - url: https://alaindube.com/api
+
+paths:
+  /ping:
+    get:
+      summary: Effectuer un ping de l'API
+      tags: [Health]
+      responses:
+        '200':
+          description: Ping réussi
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: "pong"
+
+  /auth/register:
+    post:
+      summary: Créer un nouvel utilisateur
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username:
+                  type: string
+                  maxLength: 50
+                  description: Nom d'utilisateur qui doit comporter au maximum 50 caractères
+                  example: "username"
+                password:
+                  type: string
+                  description: Mot de passe qui doit contenir 8+ caractères avec minuscules/majuscules/chiffres
+                  example: "Password123"
+      responses:
+        '403':
+          description: Tentative d'inscription alors que connecté
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+              example:
+                error:
+                  code: CANNOT_REGISTER_WHEN_LOGGED_IN
+                  message: You are already logged in
+                  details: You are already logged in. Please log out before registering
+        '400':
+          description: Requête invalide
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+              example:
+                error:
+                  code: VALIDATION_ERROR
+                  message: Invalid username length
+                  details: Username must be less than 50 characters long
+        '200':
+          description: Inscription réussie
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Register successful. You are now logged in.
+  /auth/login:
+    post:
+      summary: Se connecter en tant qu'utilisateur
+      description: Permet à un utilisateur de se connecter et d’obtenir un token d’accès.
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username:
+                  type: string
+                  example: "username"
+                password:
+                  type: string
+                  example: "Password123"
+      responses:
+        '400':
+          description: Requête invalide
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+              example:
+                error:
+                  code: AUTH_INVALID_CREDENTIALS
+                  message: Invalid username or password
+                  details: Invalid username or password
+        '200':
+          description: Connexion réussie
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                  message:
+                    type: string
+                    example: Login successful
+          
+  /auth/logout:
+    post:
+      summary: Se déconnecter
+      tags: [Auth]
+      responses:
+        '200':
+          description: Déconnexion réussie
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Logged out
+  /auth/me:
+    get:
+      summary: Vérifier qui est connecté
+      tags: [Auth]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Utilisateur connecté
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: You are logged in
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        example: fc7001d4-bc80-468f-9ca3-cbda91a3f605
+                      username:
+                        type: string
+                        example: Alain
+                      createdAt:
+                        type: string
+                        example: 2025-09-30T16:02:09.305Z
+                      updatedAt:
+                        type: string
+                        example: 2025-09-30T16:02:09.305Z
+        '401':
+          description: Utilisateur non connecté
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+              example:
+                error:
+                  code: AUTH_REQUIRED
+                  message: You need to be logged in to access this resource
+                  details: You need to be logged in to access this resource
+  /ships:
+    get:
+      summary: Obtenir la liste des navires dans ce port
+      tags: [Ships]
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Liste des navires
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Ship'
+        '401':
+          description: Utilisateur non connecté
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+              example:
+                error:
+                  code: AUTH_REQUIRED
+                  message: You need to be logged in to access this resource
+    post:
+      summary: Ajouter un nouveau navire
+      description: Ajouter un nouveau navire.
+      tags: [Ships]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, goldCargo, captain, status, crewSize]
+              properties:
+                name:
+                  type: string
+                  example: "Ship Name"
+                  minLength: 2
+                  maxLength: 100
+                goldCargo:
+                  type: number
+                  example: 50
+                  minimum: 0
+                  maximum: 1000000
+                captain:
+                  type: string
+                  example: "Captain Hook"
+                  minLength: 2
+                  maximum: 50
+                status:
+                  type: string
+                  enum: [ "docked", "sailing", "lookingForAFight" ]
+                  example: "sailing"
+                  description: "Le statut du navire doit être 'sailing' pour être accepté"
+                crewSize:
+                  type: number
+                  example: 5
+                  minimum: 1
+                  maximum: 500
+      responses:
+        201:
+          description: Navire créé avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ship'
+        401:
+          description: Utilisateur non connecté
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+              example:
+                error:
+                  code: AUTH_REQUIRED
+                  message: You need to be logged in to access this resource
+        403:
+          description: Utilisateur non autorisé à créer un navire. Doit être administrateur
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+              example:
+                error:
+                  code: FORBIDDEN
+                  message: You are not authorized to create a ship. Must be an administrator
+    delete:
+      summary: Supprimer tous les navires
+      tags: [Ships]
+      security:
+        - bearerAuth: []
+      responses:
+        204:
+          description: Navires supprimés avec succès
+        401:
+          description: Utilisateur non connecté
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+              example:
+                error:
+                  code: AUTH_REQUIRED
+                  message: You need to be logged in to access this resource
+        403:
+          description: Utilisateur non autorisé à créer un navire. Doit être administrateur
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+              example:
+                error:
+                  code: FORBIDDEN
+                  message: You are not authorized to delete ships. Must be an administrator
+  /ships/{id}:
+    get:
+      summary: Obtenir un navire spécifique
+      tags: [Ships]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+      responses:
+        200:
+          description: Navire
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ship'
+        '401':
+          description: Utilisateur non connecté
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+              example:
+                error:
+                  code: AUTH_REQUIRED
+                  message: You need to be logged in to access this resource
+    patch:
+      summary: Mettre à jour un navire spécifique
+      tags: [Ships]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: []
+              properties:
+                name:
+                  type: string
+                  example: "Ship Name"
+                  minLength: 2
+                  maxLength: 100
+                goldCargo:
+                  type: number
+                  example: 50
+                  minimum: 0
+                  maximum: 1000000
+                captain:
+                  type: string
+                  example: "Captain Hook"
+                  minLength: 2
+                  maximum: 50
+                status:
+                  type: string
+                  enum: [ "docked", "sailing", "lookingForAFight" ]
+                  example: "sailing"
+                  description: "Le statut du navire doit être 'sailing' pour être accepté"
+                crewSize:
+                  type: number
+                  example: 5
+                  minimum: 1
+                  maximum: 500
+      responses:
+        200:
+          description: Navire mis à jour avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ship'
+        401:
+          description: Utilisateur non connecté
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+              example:
+                error:
+                  code: AUTH_REQUIRED
+                  message: You need to be logged in to access this resource
+        403:
+          description: Utilisateur non autorisé à supprimer un navire. Doit être administrateur
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+              example:
+                error:
+                  code: FORBIDDEN
+                  message: You are not authorized to delete ships. Must be an administrator
+    delete:
+      summary: Supprimer un navire spécifique
+      tags:
+        - Ships
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+      responses:
+        204:
+          description: Navire supprimé avec succès
+        401:
+          description: Utilisateur non connecté
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+              example:
+                error:
+                  code: AUTH_REQUIRED
+                  message: You need to be logged in to access this resource
+        403:
+          description: Utilisateur non autorisé à supprimer un navire. Doit être administrateur
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+              example:
+                error:
+                  code: FORBIDDEN
+                  message: You are not authorized to delete ships. Must be an administrator
+  /ships/send/userlist:
+    get:
+      summary: Obtenir les utilisateurs du *broker* (liste des ports)
+      tags: [Ships]
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Liste des ports
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+                  example: "nomUtilisateur"
+        500:
+          description: Erreur d'obtention des utilisateurs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+              example:
+                error:
+                  code: REMOTE_SERVICE_ERROR
+                  message: Failed getting broker users
+        503:
+          description: Erreur d'obtention des utilisateurs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+              example:
+                error:
+                  code: REMOTE_SERVICE_ERROR
+                  message: Failed getting available ports
+  /ships/send/{recipient}:
+    post:
+      summary: Envoyer un navire vers un autre port
+      tags: [Ships]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: recipient
+          in: path
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id]
+              properties:
+                id:
+                  type: string
+                  example: fc7001d4-bc80-468f-9ca3-cbda91a3f605
+      responses:
+        204:
+          description: Navire envoyé avec succès
+        400:
+          description: Erreur lors de l'envoi du navire (ex. port plein, navire n'étant pas *docked*, etc.)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+              example:
+                error:
+                  code: VALIDATION_ERROR
+                  message: You need to be logged in to access this resource
+        '401':
+          description: Utilisateur non connecté
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+              example:
+                error:
+                  code: AUTH_REQUIRED
+                  message: You need to be logged in to access this resource
+        404:
+          description: Port ou navire introuvable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+              example:
+                error:
+                  code: VALIDATION_ERROR
+                  message: Ship not found
+
+  /ship/dock:
+    post:
+      summary: Envoyer un navire vers CE port
+      tags:
+        - Ships
+      security:
+        - bearerAuth: []
+          clientId: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, goldCargo, captain, status, crewSize, createdBy]
+              properties:
+                name:
+                  type: string
+                  example: "Ship Name"
+                  minLength: 2
+                  maxLength: 100
+                goldCargo:
+                  type: number
+                  example: 50
+                  minimum: 0
+                  maximum: 1000000
+                captain:
+                  type: string
+                  example: "Captain Hook"
+                  minLength: 2
+                  maximum: 50
+                status:
+                  type: string
+                  enum: ["docked", "sailing", "lookingForAFight"]
+                  example: "sailing"
+                  description: "Le statut du navire doit être 'sailing' pour être accepté"
+                crewSize:
+                  type: number
+                  example: 5
+                  minimum: 1
+                  maximum: 500
+                createdBy:
+                  type: string
+                  example: "Alain"
+                  maxLength: 38
+                createdAt:
+                  type: string
+                  example: "2025-09-30T16:02:09.305Z"
+      responses:
+        '200':
+          description: Navire reçu avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Ship received successfully
+
+components:
+  schemas:
+    AppError:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              example: UNAUTHORIZED
+            message:
+              type: string
+              example: You need to be logged in to access this resource
+            details:
+              type: string
+              example: Extra context about the error
+    Ship:
+      type: object
+      required: [id, name, goldCargo, captain, status, crewSize, createdBy, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          example: fc7001d4-bc80-468f-9ca3-cbda91a3f605
+        name:
+          type: string
+          example: "Ship Name"
+          minLength: 2
+          maxLength: 100
+        goldCargo:
+          type: number
+          example: 50
+          minimum: 0
+          maximum: 1000000
+        captain:
+          type: string
+          example: "Captain Hook"
+          minLength: 2
+          maximum: 50
+        status:
+          type: string
+          enum: [ "docked", "sailing", "lookingForAFight" ]
+          example: "sailing"
+          description: "Le statut du navire doit être 'sailing' pour être accepté"
+        crewSize:
+          type: number
+          example: 5
+          minimum: 1
+          maximum: 500
+        createdBy:
+          type: string
+          example: "Alain"
+          maxLength: 38
+        createdAt:
+          type: string
+          example: "2025-09-30T16:02:09.305Z"
+        updatedAt:
+          type: string
+          example: "2025-09-30T16:02:09.305Z"
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    clientId:
+      type: apiKey
+      in: header
+      name: x-client-id

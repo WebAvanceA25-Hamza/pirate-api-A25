@@ -1,0 +1,29 @@
+@_baseUrl = https://alaindube.com:2223/api
+@contentType = application/json
+@clientId = 90ac485a-c95c-45b4-a534-9061b6363192
+
+### 🔐 Login et stockage du token
+POST {{_baseUrl}}/auth/login
+Content-Type: {{contentType}}
+Accept: {{contentType}}
+
+{
+"username": "nouvel_utilisateur",
+"password": "Password123"
+}
+
+> {% client.global.set("_token", response.headers["set-cookie"][0].match(/token=([^;]+)/)[1]) %}
+
+###
+
+### ⚓️ Dock a ship (avec token)
+POST {{_baseUrl}}/ship/dock
+Content-Type: {{contentType}}
+Accept: {{contentType}}
+Authorization: Bearer {{_token}}
+x-client-id: {{clientId}}
+
+{
+"shipId": "abc123",
+"dockId": "dock-42"
+}

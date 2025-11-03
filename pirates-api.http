@@ -1,0 +1,201 @@
+# ========================================
+# Pirates API -  REST Client VS Code REPO
+# Utilise les variables de settings.json
+#   Configurations: 
+#       Dans View - Command Palette... - Preferences: Open Settings (UI)
+#       Dans Rest Client – Workspace – Rest-client : Environment Variables – Edit in settings.json
+#       Créer un fichier (./.vscode/settings.json):
+#         {
+#             "rest-client.environmentVariables": {
+#                 "$shared": {
+#                     "apiKey": ""
+#                 },
+#                 "local": {
+#                     "baseUrl": "https://alaindube.com:2223/api",
+#                     "token": "",
+#                     "shipId": "fc7001d4-bc80-468f-9ca3-cbda91a3f605",
+#                     "recipient": "prof",
+#                     "clientId": "alain",
+#                     "BROKER_CLIENT_SECRET": "86cb073d0432640662eb6d3af9e3bc825ed34852abfd158483e293be22bee13e",
+#                     "BROKER_CLIENT_ID": "app_e8b1de42eb39c53f09e6783a18e1a5a7"
+#                 }
+#             }
+#          }
+#
+#   Changer l’environnement dans VsCode : Une fois le fichier http ouvert, voir dans la barre bleu en bas a droite.
+#
+# ========================================
+
+
+@_baseUrl = {{baseUrl}}
+@_token = {{token}}
+
+@shipId = dd2c7487-0321-4d34-8a99-ab306a60b0ea
+@recipient = {{recipient}}
+@clientId = 90ac485a-c95c-45b4-a534-9061b6363192
+
+@contentType = application/json
+
+
+# ========================================
+# Health Check
+# ========================================
+
+### 🩺 Ping (texte)
+# Vérifie que l'API est en ligne
+GET {{_baseUrl}}/ping
+Accept: text/plain
+
+###
+
+# ========================================
+# Auth - Utilisateurs
+# ========================================
+
+### 👤 Register - Créer un nouvel utilisateur
+POST {{_baseUrl}}/auth/register
+Content-Type: {{contentType}}
+Accept: {{contentType}}
+
+{
+  "username": "nouvel_utilisateur",
+  "password": "Password123"
+}
+
+###
+
+
+### Login et stockage du token
+# @name tokenAPI
+
+POST {{_baseUrl}}/auth/login
+Content-Type: application/json
+Accept: application/json
+
+{
+  "username": "nouvel_utilisateur",
+  "password": "Password123"
+}
+
+### Get me
+@_token =  {{tokenAPI.response.body.token}}
+
+
+### 👤 Me - Informations sur l'utilisateur connecté
+GET {{_baseUrl}}/auth/me
+Accept: {{contentType}}
+
+###
+
+### 👤 Me - Informations sur l'utilisateur connecté
+GET {{_baseUrl}}/auth/me
+Accept: {{contentType}}
+Authorization: Bearer {{_token}}
+
+###
+
+### 👤 Logout - Déconnexion
+POST {{_baseUrl}}/auth/logout
+Accept: {{contentType}}
+Authorization: Bearer {{_token}}
+
+###
+
+# ========================================
+# Ships - Gestion des navires
+# ========================================
+
+### 🚢 Liste des navires
+GET {{_baseUrl}}/ships
+Accept: {{contentType}}
+Authorization: Bearer {{_token}}
+
+###
+
+### 🚢 Ajouter un navire
+POST {{_baseUrl}}/ships
+Content-Type: {{contentType}}
+Accept: {{contentType}}
+Authorization: Bearer {{_token}}
+
+{
+  "name": "Black Pearl",
+  "goldCargo": 500,
+  "captain": "Jack Sparrow",
+  "status": "sailing",
+  "crewSize": 50
+}
+
+###
+
+### 🚢 Supprimer tous les navires
+DELETE {{_baseUrl}}/ships
+Accept: {{contentType}}
+Authorization: Bearer {{_token}}
+
+###
+
+### 🚢 Obtenir un navire par ID
+GET {{_baseUrl}}/ships/{{shipId}}
+Accept: {{contentType}}
+Authorization: Bearer {{_token}}
+
+###
+
+### 🚢 Mettre à jour un navire
+PATCH {{_baseUrl}}/ships/{{shipId}}
+Content-Type: {{contentType}}
+Accept: {{contentType}}
+Authorization: Bearer {{_token}}
+
+{
+  "status": "docked",
+  "goldCargo": 600
+}
+
+###
+
+### 🚢 Supprimer un navire
+DELETE {{_baseUrl}}/ships/{{shipId}}
+Accept: {{contentType}}
+Authorization: Bearer {{_token}}
+
+###
+
+### ⚓ Liste des utilisateurs du broker
+GET {{_baseUrl}}/ships/send/userlist
+Accept: {{contentType}}
+Authorization: Bearer {{_token}}
+
+###
+
+### ⚓ Envoyer un navire vers un autre port
+POST {{_baseUrl}}/ships/send/{{recipient}}
+Content-Type: {{contentType}}
+Accept: {{contentType}}
+Authorization: Bearer {{_token}}
+
+{
+  "id": "{{shipId}}"
+}
+
+###
+
+### ⚓ Dock - Recevoir un navire dans CE port
+POST {{_baseUrl}}/ship/dock
+Content-Type: {{contentType}}
+Accept: {{contentType}}
+Authorization: Bearer {{BROKER_CLIENT_SECRET}}
+x-client-id: {{BROKER_CLIENT_ID}}
+
+{
+  "name": "Flying Dutchman",
+  "goldCargo": 1000,
+  "captain": "Davy Jones",
+  "status": "sailing",
+  "crewSize": 100,
+  "createdBy": "alain",
+  "createdAt": "2025-09-30T16:02:09.305Z"
+}
+
+

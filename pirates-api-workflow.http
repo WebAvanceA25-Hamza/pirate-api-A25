@@ -1,0 +1,99 @@
+@_baseUrl = {{baseUrl}}
+@_token = {{token}}
+
+@shipId = dd2c7487-0321-4d34-8a99-ab306a60b0ea
+@recipient = {{recipient}}
+@clientId = 90ac485a-c95c-45b4-a534-9061b6363192
+
+@contentType = application/json
+
+# ========================================
+# 1️⃣ Login - récupère le JWT
+# ========================================
+# @name tokenAPI
+
+POST {{_baseUrl}}/auth/login
+Content-Type: {{contentType}}
+Accept: {{contentType}}
+
+{
+  "username": "nouvel_utilisateur",
+  "password": "Password123"
+}
+
+### Get me
+@_token =  {{tokenAPI.response.body.token}}
+###
+
+# ========================================
+# 2️⃣ Créer un navire
+# ========================================
+# @name tokenShipId
+
+POST {{_baseUrl}}/ships
+Content-Type: {{contentType}}
+Accept: {{contentType}}
+Authorization: Bearer {{_token}}
+
+{
+  "name": "Black Pearl",
+  "goldCargo": 500,
+  "captain": "Jack Sparrow",
+  "status": "sailing",
+  "crewSize": 50
+}
+
+### Get Ship ID
+@shipId =  {{tokenShipId.response.body.id}}
+
+
+###
+
+# ========================================
+# 3️⃣ Lister tous les navires
+# ========================================
+GET {{_baseUrl}}/ships
+Accept: {{contentType}}
+Authorization: Bearer {{_token}}
+
+###
+
+# ========================================
+# 4️⃣ Mettre à jour le navire créé
+# ========================================
+PATCH {{_baseUrl}}/ships/{{shipId}}
+Content-Type: {{contentType}}
+Accept: {{contentType}}
+Authorization: Bearer {{_token}}
+
+{
+  "goldCargo": 601,
+  "crewSize": 201
+}
+
+###
+
+# ========================================
+# 5️⃣ Obtenir le navire par ID
+# ========================================
+GET {{_baseUrl}}/ships/{{shipId}}
+Accept: {{contentType}}
+Authorization: Bearer {{_token}}
+
+###
+
+# ========================================
+# 6️⃣ Supprimer le navire
+# ========================================
+DELETE {{_baseUrl}}/ships/{{shipId}}
+Accept: {{contentType}}
+Authorization: Bearer {{_token}}
+
+###
+
+# ========================================
+# 7️⃣ Logout
+# ========================================
+POST {{_baseUrl}}/auth/logout
+Accept: {{contentType}}
+Authorization: Bearer {{_token}}

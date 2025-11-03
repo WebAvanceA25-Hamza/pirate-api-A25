@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "mysql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1757948661673,
+      "tag": "0000_add-users",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1759295213855,
+      "tag": "0001_add-ships",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1760746479003,
+      "tag": "0002_admin_users",
+      "breakpoints": true
+    }
+  ]
+}

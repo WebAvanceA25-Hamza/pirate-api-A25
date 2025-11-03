@@ -1,0 +1,65 @@
+// Configuration des paramètres
+import dotenv from "dotenv";
+dotenv.config();
+
+// Chargement des dépendances
+import express from "express";
+import helmet from "helmet";
+import cors from "cors";
+import yaml from 'yamljs';
+import path from "path";
+import swaggerUi from 'swagger-ui-express';
+import {authRouter} from "./routes/auth.routes";
+import cookieParser from "cookie-parser";
+import {errorHandler} from "./middleware/error.middleware";
+import {authLookup} from "./middleware/authLookup.middleware";
+import {receiveShipRouter, shipRouter} from "./routes/ship.routes";
+
+
+const app = express();
+const port = process.env.PORT || 3001;
+
+app.use(helmet());
+app.use(cors({
+  origin: "*",
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
+
+app.use(express.json());
+
+// Recommendé par ChatGPT pour lire les cookies
+app.use(cookieParser());
+
+// Configuration des routes
+if(process.env.NODE_ENV === "development") app.use(
+  "/swagger",
+  swaggerUi.serve,
+  swaggerUi.setup(yaml.load(path.join(__dirname, "./swagger.yml")))
+)
+
+app.get("/api/ping", (req, res) => {
+  res.status(200).send('pong')
+})
+app.use("/api/auth", authLookup, authRouter());
+app.use("/api/ships", shipRouter());
+app.use("/api/ship", receiveShipRouter());
+
+// Gestion des erreurs
+
+app.use(errorHandler);
+
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+})
+
+// Démarrage du serveur
+app.listen(port, () => {
+  console.log(`Listening on port ${port}`);
+  console.log("Documentation on route /swagger")
+  console.log("Ping on route /ping")
+})

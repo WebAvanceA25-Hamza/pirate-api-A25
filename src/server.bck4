@@ -1,0 +1,32 @@
+import express from 'express';
+import swaggerUi from 'swagger-ui-express';
+import yaml from 'js-yaml';
+//import fs from 'fs';
+import path from 'path';
+import https from 'https';
+
+const app = express();
+const PORT = 2223;
+
+// 🔐 Chemins vers les certificats SSL générés par Certbot
+const sslOptions = {
+  key: fs.readFileSync('/etc/letsencrypt/live/alaindube.com/privkey.pem'),
+  cert: fs.readFileSync('/etc/letsencrypt/live/alaindube.com/fullchain.pem'),
+};
+
+// 📄 Charger le fichier Swagger YAML
+const swaggerPath = path.join(__dirname, './swagger.yml');
+const swaggerDocument = yaml.load(fs.readFileSync(swaggerPath, 'utf8'));
+
+// 🚀 Servir Swagger sur /swagger
+app.use('/swagger', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
+// 🧪 Route de test simple
+app.get('/hello', (req, res) => {
+  res.json({ message: '👋 Hello depuis Pirate API en HTTPS !' });
+});
+
+// 🔐 Démarrer le serveur HTTPS
+https.createServer(sslOptions, app).listen(PORT, () => {
+  console.log(`✅ Swagger disponible sur https://alaindube.com:${PORT}/swagger`);
+});
