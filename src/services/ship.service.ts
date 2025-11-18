@@ -60,7 +60,7 @@ export class ShipService {
   // ChatGPT sur comment utiliser Axios
 
   async getBrokerUsers(): Promise<Array<string>> {
-    const url = "https://pwa-broker-pirates-2bc1349418b0.herokuapp.com/api/users";
+    const url = process.env.Broker_url || ""  ;
 
     try {
       const response = await axios.get<{ success: boolean; users: string[]; totalUsers: number; }>(
@@ -110,7 +110,7 @@ export class ShipService {
       throw new AppError("Failed sending ship", { statusCode: 400, code: "VALIDATION_ERROR", isOperational: true })
     }
 
-    const url = "https://pwa-broker-pirates-2bc1349418b0.herokuapp.com/api/ship/sail/" + recipientName;
+    const url = process.env.Broker_url_ship + recipientName;
     const data = {
       "name": ship.name,
       "goldCargo": ship.goldCargo,
