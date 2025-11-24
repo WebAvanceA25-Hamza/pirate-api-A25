@@ -6,7 +6,7 @@ info:
   title: Pirates API
   version: 1.0.0
 servers:
-  - url: https://hamzapirate.edwrdlhamza.me/api
+  - url: https://hamza.alain.lab.edwrdl.ca/api
 
 paths:
   /ping:
