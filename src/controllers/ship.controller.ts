@@ -113,4 +113,12 @@ export class ShipController {
       next(error);
     }
   }
+  retirerOr = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      await shipService.retierOr(req.body.Or, req.params.idBateau);
+      res.status(204).send();
+    } catch (error) {
+      next(error);
+    }
+  }
 }

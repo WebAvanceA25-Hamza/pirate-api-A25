@@ -68,4 +68,7 @@ export class ShipRepository {
     console.log("Updating goldCargo for ship ID:", idbateau, "to:", goldBateau);
     await db.update(ships).set({ goldCargo: goldBateau }).where(eq(ships.id, idbateau));
   }
+  async retirerOr(idbateau: string, goldBateau: number): Promise<void> {
+    await db.update(ships).set({ goldCargo: goldBateau }).where(eq(ships.id, idbateau));
+  }
 }

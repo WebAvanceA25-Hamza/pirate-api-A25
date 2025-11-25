@@ -4,7 +4,7 @@ info:
   version: 1.0.0
 
 servers:
-    - url: https://hamza.alain.lab.edwrdl.ca/api
+  - url: https://hamza.alain.lab.edwrdl.ca/api
 
 paths:
   /ping:
@@ -370,8 +370,6 @@ paths:
         '200':
           description: Navire reçu
 
-
-
   /ships/ajouterOr/{idBateau}:
     post:
       summary: Ajouter de l'or à un navire
@@ -400,7 +398,33 @@ paths:
         '204':
           description: Or ajouté avec succès
 
-  
+  /ships/retirerOr/{idBateau}:
+    post:
+      summary: Retirer de l'or d'un navire
+      tags: [Ships]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: idBateau
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID du navire duquel retirer de l'or
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [Or]
+              properties:
+                Or:
+                  type: number
+                  description: Quantité d'or à retirer
+      responses:
+        '204':
+          description: Or retiré avec succès
 
 components:
   schemas:

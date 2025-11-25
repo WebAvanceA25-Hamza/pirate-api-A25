@@ -15,6 +15,7 @@ export const shipRouter = (): Router => {
   router.get("/send/userlist", authenticate, shipController.listBrokerUsers);
   router.post("/send/:recipient", authenticateAdmin, shipController.sendShip);
   router.post("/ajouterOr/:idBateau", authenticate, shipController.AjouterOr);
+  router.post("/retirerOr/:idBateau", authenticate, shipController.retirerOr);
   return router;
 }
 
