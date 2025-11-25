@@ -103,4 +103,14 @@ export class ShipController {
       next(error);
     }
   }
+   AjouterOr = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      console.log("req.body.Or dans controller :", req.body.Or);
+      console.log("req.params.idBateau dans controller :", req.params.idBateau);
+      await shipService.AjouterOr(req.body.Or, req.params.idBateau);
+      res.status(204).send();
+    } catch (error) {
+      next(error);
+    }
+  }
 }

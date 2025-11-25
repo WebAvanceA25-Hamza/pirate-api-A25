@@ -1,12 +1,10 @@
-# Initialement fait par William
-# Modifications mineures par  Alain
-#    changer le servers:url pour alaindube.com
 openapi: 3.0.0
 info:
   title: Pirates API
   version: 1.0.0
+
 servers:
-  - url: https://hamza.alain.lab.edwrdl.ca/api
+    - url: https://hamza.alain.lab.edwrdl.ca/api
 
 paths:
   /ping:
@@ -37,11 +35,11 @@ paths:
                 username:
                   type: string
                   maxLength: 50
-                  description: Nom d'utilisateur qui doit comporter au maximum 50 caractères
+                  description: Nom d'utilisateur (max 50 caractères)
                   example: "username"
                 password:
                   type: string
-                  description: Mot de passe qui doit contenir 8+ caractères avec minuscules/majuscules/chiffres
+                  description: Mot de passe (8+ caractères, minuscules/majuscules/chiffres)
                   example: "Password123"
       responses:
         '403':
@@ -50,22 +48,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AppError'
-              example:
-                error:
-                  code: CANNOT_REGISTER_WHEN_LOGGED_IN
-                  message: You are already logged in
-                  details: You are already logged in. Please log out before registering
         '400':
           description: Requête invalide
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/AppError'
-              example:
-                error:
-                  code: VALIDATION_ERROR
-                  message: Invalid username length
-                  details: Username must be less than 50 characters long
         '200':
           description: Inscription réussie
           content:
@@ -76,10 +64,10 @@ paths:
                   message:
                     type: string
                     example: Register successful. You are now logged in.
+
   /auth/login:
     post:
       summary: Se connecter en tant qu'utilisateur
-      description: Permet à un utilisateur de se connecter et d’obtenir un token d’accès.
       tags: [Auth]
       requestBody:
         required: true
@@ -98,15 +86,6 @@ paths:
       responses:
         '400':
           description: Requête invalide
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AppError'
-              example:
-                error:
-                  code: AUTH_INVALID_CREDENTIALS
-                  message: Invalid username or password
-                  details: Invalid username or password
         '200':
           description: Connexion réussie
           content:
@@ -120,7 +99,7 @@ paths:
                   message:
                     type: string
                     example: Login successful
-          
+
   /auth/logout:
     post:
       summary: Se déconnecter
@@ -136,6 +115,7 @@ paths:
                   message:
                     type: string
                     example: Logged out
+
   /auth/me:
     get:
       summary: Vérifier qui est connecté
@@ -150,43 +130,19 @@ paths:
               schema:
                 type: object
                 properties:
-                  message:
-                    type: string
-                    example: You are logged in
                   user:
-                    type: object
-                    properties:
-                      id:
-                        type: string
-                        example: fc7001d4-bc80-468f-9ca3-cbda91a3f605
-                      username:
-                        type: string
-                        example: Alain
-                      createdAt:
-                        type: string
-                        example: 2025-09-30T16:02:09.305Z
-                      updatedAt:
-                        type: string
-                        example: 2025-09-30T16:02:09.305Z
+                    $ref: '#/components/schemas/User'
         '401':
-          description: Utilisateur non connecté
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AppError'
-              example:
-                error:
-                  code: AUTH_REQUIRED
-                  message: You need to be logged in to access this resource
-                  details: You need to be logged in to access this resource
+          description: Non connecté
+
   /ships:
     get:
-      summary: Obtenir la liste des navires dans ce port
+      summary: Obtenir la liste des navires
       tags: [Ships]
       security:
         - bearerAuth: []
       responses:
-        200:
+        '200':
           description: Liste des navires
           content:
             application/json:
@@ -194,19 +150,9 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Ship'
-        '401':
-          description: Utilisateur non connecté
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AppError'
-              example:
-                error:
-                  code: AUTH_REQUIRED
-                  message: You need to be logged in to access this resource
+
     post:
       summary: Ajouter un nouveau navire
-      description: Ajouter un nouveau navire.
       tags: [Ships]
       security:
         - bearerAuth: []
@@ -221,83 +167,38 @@ paths:
                 name:
                   type: string
                   example: "Ship Name"
-                  minLength: 2
-                  maxLength: 100
                 goldCargo:
                   type: number
                   example: 50
-                  minimum: 0
-                  maximum: 1000000
                 captain:
                   type: string
                   example: "Captain Hook"
-                  minLength: 2
-                  maximum: 50
                 status:
                   type: string
-                  enum: [ "docked", "sailing", "lookingForAFight" ]
+                  enum: ["docked", "sailing", "lookingForAFight"]
                   example: "sailing"
-                  description: "Le statut du navire doit être 'sailing' pour être accepté"
                 crewSize:
                   type: number
                   example: 5
-                  minimum: 1
-                  maximum: 500
       responses:
-        201:
-          description: Navire créé avec succès
+        '201':
+          description: Navire créé
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Ship'
-        401:
-          description: Utilisateur non connecté
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AppError'
-              example:
-                error:
-                  code: AUTH_REQUIRED
-                  message: You need to be logged in to access this resource
-        403:
-          description: Utilisateur non autorisé à créer un navire. Doit être administrateur
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AppError'
-              example:
-                error:
-                  code: FORBIDDEN
-                  message: You are not authorized to create a ship. Must be an administrator
+
     delete:
       summary: Supprimer tous les navires
       tags: [Ships]
       security:
         - bearerAuth: []
       responses:
-        204:
-          description: Navires supprimés avec succès
-        401:
-          description: Utilisateur non connecté
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AppError'
-              example:
-                error:
-                  code: AUTH_REQUIRED
-                  message: You need to be logged in to access this resource
-        403:
-          description: Utilisateur non autorisé à créer un navire. Doit être administrateur
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AppError'
-              example:
-                error:
-                  code: FORBIDDEN
-                  message: You are not authorized to delete ships. Must be an administrator
+        '204':
+          description: Tous les navires supprimés
+        '401':
+          description: Non authentifié
+
   /ships/{id}:
     get:
       summary: Obtenir un navire spécifique
@@ -308,25 +209,19 @@ paths:
         - name: id
           in: path
           required: true
+          schema:
+            type: string
+          description: ID du navire
       responses:
-        200:
-          description: Navire
+        '200':
+          description: Navire trouvé
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Ship'
-        '401':
-          description: Utilisateur non connecté
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AppError'
-              example:
-                error:
-                  code: AUTH_REQUIRED
-                  message: You need to be logged in to access this resource
+
     patch:
-      summary: Mettre à jour un navire spécifique
+      summary: Mettre à jour certaines informations d'un navire
       tags: [Ships]
       security:
         - bearerAuth: []
@@ -334,107 +229,77 @@ paths:
         - name: id
           in: path
           required: true
+          schema:
+            type: string
+          description: ID du navire à mettre à jour
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: []
               properties:
                 name:
                   type: string
-                  example: "Ship Name"
-                  minLength: 2
-                  maxLength: 100
+                  example: "Updated Ship Name"
                 goldCargo:
                   type: number
-                  example: 50
-                  minimum: 0
-                  maximum: 1000000
+                  example: 100
                 captain:
                   type: string
-                  example: "Captain Hook"
-                  minLength: 2
-                  maximum: 50
+                  example: "New Captain"
                 status:
                   type: string
-                  enum: [ "docked", "sailing", "lookingForAFight" ]
-                  example: "sailing"
-                  description: "Le statut du navire doit être 'sailing' pour être accepté"
+                  enum: ["docked", "sailing", "lookingForAFight"]
+                  example: "docked"
                 crewSize:
                   type: number
-                  example: 5
-                  minimum: 1
-                  maximum: 500
+                  example: 10
+                lootedNumber:
+                  type: number
+                  example: 2
       responses:
-        200:
-          description: Navire mis à jour avec succès
+        '200':
+          description: Navire mis à jour
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Ship'
-        401:
-          description: Utilisateur non connecté
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AppError'
-              example:
-                error:
-                  code: AUTH_REQUIRED
-                  message: You need to be logged in to access this resource
-        403:
-          description: Utilisateur non autorisé à supprimer un navire. Doit être administrateur
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AppError'
-              example:
-                error:
-                  code: FORBIDDEN
-                  message: You are not authorized to delete ships. Must be an administrator
+        '400':
+          description: Requête invalide
+        '401':
+          description: Non authentifié
+        '404':
+          description: Navire non trouvé
+
     delete:
-      summary: Supprimer un navire spécifique
-      tags:
-        - Ships
+      summary: Supprimer un navire par ID
+      tags: [Ships]
       security:
         - bearerAuth: []
       parameters:
         - name: id
           in: path
           required: true
+          schema:
+            type: string
+          description: ID du navire à supprimer
       responses:
-        204:
-          description: Navire supprimé avec succès
-        401:
-          description: Utilisateur non connecté
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AppError'
-              example:
-                error:
-                  code: AUTH_REQUIRED
-                  message: You need to be logged in to access this resource
-        403:
-          description: Utilisateur non autorisé à supprimer un navire. Doit être administrateur
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AppError'
-              example:
-                error:
-                  code: FORBIDDEN
-                  message: You are not authorized to delete ships. Must be an administrator
+        '204':
+          description: Navire supprimé
+        '401':
+          description: Non authentifié
+        '404':
+          description: Navire non trouvé
+
   /ships/send/userlist:
     get:
-      summary: Obtenir les utilisateurs du *broker* (liste des ports)
+      summary: Obtenir la liste des ports disponibles
       tags: [Ships]
       security:
         - bearerAuth: []
       responses:
-        200:
+        '200':
           description: Liste des ports
           content:
             application/json:
@@ -443,26 +308,7 @@ paths:
                 items:
                   type: string
                   example: "nomUtilisateur"
-        500:
-          description: Erreur d'obtention des utilisateurs
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AppError'
-              example:
-                error:
-                  code: REMOTE_SERVICE_ERROR
-                  message: Failed getting broker users
-        503:
-          description: Erreur d'obtention des utilisateurs
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AppError'
-              example:
-                error:
-                  code: REMOTE_SERVICE_ERROR
-                  message: Failed getting available ports
+
   /ships/send/{recipient}:
     post:
       summary: Envoyer un navire vers un autre port
@@ -485,44 +331,12 @@ paths:
                   type: string
                   example: fc7001d4-bc80-468f-9ca3-cbda91a3f605
       responses:
-        204:
-          description: Navire envoyé avec succès
-        400:
-          description: Erreur lors de l'envoi du navire (ex. port plein, navire n'étant pas *docked*, etc.)
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AppError'
-              example:
-                error:
-                  code: VALIDATION_ERROR
-                  message: You need to be logged in to access this resource
-        '401':
-          description: Utilisateur non connecté
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AppError'
-              example:
-                error:
-                  code: AUTH_REQUIRED
-                  message: You need to be logged in to access this resource
-        404:
-          description: Port ou navire introuvable
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AppError'
-              example:
-                error:
-                  code: VALIDATION_ERROR
-                  message: Ship not found
-
+        '204':
+          description: Navire envoyé
   /ship/dock:
     post:
-      summary: Envoyer un navire vers CE port
-      tags:
-        - Ships
+      summary: Recevoir un navire dans ce port
+      tags: [Ships]
       security:
         - bearerAuth: []
           clientId: []
@@ -537,69 +351,75 @@ paths:
                 name:
                   type: string
                   example: "Ship Name"
-                  minLength: 2
-                  maxLength: 100
                 goldCargo:
                   type: number
                   example: 50
-                  minimum: 0
-                  maximum: 1000000
                 captain:
                   type: string
                   example: "Captain Hook"
-                  minLength: 2
-                  maximum: 50
                 status:
                   type: string
                   enum: ["docked", "sailing", "lookingForAFight"]
-                  example: "sailing"
-                  description: "Le statut du navire doit être 'sailing' pour être accepté"
                 crewSize:
                   type: number
                   example: 5
-                  minimum: 1
-                  maximum: 500
                 createdBy:
                   type: string
                   example: "Alain"
-                  maxLength: 38
-                createdAt:
-                  type: string
-                  example: "2025-09-30T16:02:09.305Z"
       responses:
         '200':
-          description: Navire reçu avec succès
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: Ship received successfully
+          description: Navire reçu
+
+
+
+  /ships/ajouterOr/{idBateau}:
+    post:
+      summary: Ajouter de l'or à un navire
+      tags: [Ships]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: idBateau
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID du navire auquel ajouter de l'or
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [Or]
+              properties:
+                Or:
+                  type: number
+                  description: Quantité d'or à ajouter
+      responses:
+        '204':
+          description: Or ajouté avec succès
+
+  
 
 components:
   schemas:
     AppError:
       type: object
-      required: [error]
       properties:
         error:
           type: object
-          required: [code, message]
           properties:
             code:
               type: string
-              example: UNAUTHORIZED
             message:
               type: string
-              example: You need to be logged in to access this resource
             details:
               type: string
-              example: Extra context about the error
+
     Ship:
       type: object
-      required: [id, name, goldCargo, captain, status, crewSize, createdBy, createdAt, updatedAt]
+      required: [id, name, goldCargo, captain, status, crewSize, lootedNumber, createdBy, createdAt, updatedAt]
       properties:
         id:
           type: string
@@ -607,38 +427,42 @@ components:
         name:
           type: string
           example: "Ship Name"
-          minLength: 2
-          maxLength: 100
         goldCargo:
           type: number
           example: 50
-          minimum: 0
-          maximum: 1000000
         captain:
           type: string
           example: "Captain Hook"
-          minLength: 2
-          maximum: 50
         status:
           type: string
-          enum: [ "docked", "sailing", "lookingForAFight" ]
-          example: "sailing"
-          description: "Le statut du navire doit être 'sailing' pour être accepté"
+          enum: ["docked", "sailing", "lookingForAFight"]
         crewSize:
           type: number
           example: 5
-          minimum: 1
-          maximum: 500
+        lootedNumber:
+          type: number
+          example: 0
         createdBy:
           type: string
           example: "Alain"
-          maxLength: 38
         createdAt:
           type: string
           example: "2025-09-30T16:02:09.305Z"
         updatedAt:
           type: string
           example: "2025-09-30T16:02:09.305Z"
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        username:
+          type: string
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
 
   securitySchemes:
     bearerAuth:

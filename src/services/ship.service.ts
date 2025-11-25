@@ -149,4 +149,32 @@ export class ShipService {
 
     await shipRepository.deleteById(ship.id);
   }
+   async AjouterOr(amount: number, idbateau: string): Promise<void> {
+    try {
+      console.log("amount dans AjouterOr service :", amount);
+      console.log("idbateau dans AjouterOr service :", idbateau);
+
+      const ship = await shipRepository.findById(idbateau);
+      console.log("ship trouvé :", ship);
+    console.log("goldCargo actuel du ship :", ship?.goldCargo);
+
+      if (!ship) {
+        throw new AppError("Ship not found", {
+          statusCode: 404,
+          code: "VALIDATION_ERROR",
+          details: "Ship not found",
+          isOperational: true,
+        });
+      }
+
+
+      ship.goldCargo += amount;
+console.log("goldCargo actuel du ship :", ship?.goldCargo);
+
+      await shipRepository.AjouterOr(idbateau, ship.goldCargo);
+    } catch (error) {
+      console.error("Erreur dans AjouterOr :", error);
+      throw error; // relance l'erreur capturée
+    }
+  }
 }

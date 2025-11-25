@@ -9,6 +9,9 @@ export interface Ship {
   createdAt: Date;
   updatedAt: Date;
 }
+export interface Shiplooted {
+  lootednumber: number;
+}
 
 export interface CreateShipRequest {
   name: string;

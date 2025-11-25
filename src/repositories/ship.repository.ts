@@ -64,4 +64,8 @@ export class ShipRepository {
   async deleteAll(): Promise<void> {
     await db.delete(ships);
   }
+   async AjouterOr(idbateau: string, goldBateau: number): Promise<void> {
+    console.log("Updating goldCargo for ship ID:", idbateau, "to:", goldBateau);
+    await db.update(ships).set({ goldCargo: goldBateau }).where(eq(ships.id, idbateau));
+  }
 }
