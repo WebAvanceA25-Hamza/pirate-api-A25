@@ -129,4 +129,13 @@ export class ShipController {
       next(error);
     }
   }
+     AjouterEquipage= async (req: Request, res: Response, next: NextFunction) => {
+     try {
+       await shipService.AjouterEquipage(req.params.idBateau, req.body.newCrew);
+       res.status(204).send();
+    } catch (error) {
+      next(error);
+    }
+
+      }
 }

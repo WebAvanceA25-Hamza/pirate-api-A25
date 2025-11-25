@@ -74,4 +74,8 @@ export class ShipRepository {
   async RetirerEquipage(idbateau: string, nombreEquipage: number): Promise<void> {
     await db.update(ships).set({ crewSize: nombreEquipage }).where(eq(ships.id, idbateau));
   }
+   async AjouterEquipage(idbateau: string, nombreEquipage: number): Promise<void> {
+    console.log("Updating crewSize for ship ID:", idbateau, "to:", nombreEquipage);
+    await db.update(ships).set({ crewSize: nombreEquipage }).where(eq(ships.id, idbateau));
+  }
 }

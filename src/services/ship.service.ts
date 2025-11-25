@@ -219,4 +219,25 @@ export class ShipService {
         throw new AppError("Ship not found", { statusCode: 404, code: "VALIDATION_ERROR", details: "Ship not found", isOperational: true });
       }
     }
+     async AjouterEquipage(idbateau:string, nombreEquipage:number): Promise<void>{
+      try {
+        console.log("nombreEquipage dans AjouterEquipage service :", nombreEquipage);
+        console.log("idbateau dans AjouterEquipage service :", idbateau);
+          const ship = await shipRepository.findById(idbateau);
+          console.log("ship trouvé :", ship);
+        if (!ship) {
+        throw new AppError("Ship not found", {
+          statusCode: 404,
+          code: "VALIDATION_ERROR",
+          details: "Ship not found",
+          isOperational: true,
+        });
+      }
+        ship.crewSize += nombreEquipage;        
+        await shipRepository.AjouterEquipage(idbateau,ship.crewSize);
+      }
+      catch {
+        throw new AppError("ship error", { statusCode: 404, code: "VALIDATION_ERROR", details: "Ship not found", isOperational: true });
+      }
+    }
 }
