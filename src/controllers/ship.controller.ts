@@ -121,4 +121,12 @@ export class ShipController {
       next(error);
     }
   }
+   RetirerEquipage= async (req: Request, res: Response, next: NextFunction) => {
+     try {
+       await shipService.RetirerEquipage(req.params.idBateau, Number(req.body.newCrew));
+       res.status(204).send();
+    } catch (error) {
+      next(error);
+    }
+  }
 }

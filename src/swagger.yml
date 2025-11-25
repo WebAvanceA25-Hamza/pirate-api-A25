@@ -370,6 +370,33 @@ paths:
         '200':
           description: Navire reçu
 
+  /ships/retirerEquipage/{idBateau}:
+    post:
+      summary: Retirer des membres d'équipage d'un navire
+      tags: [Ships]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: idBateau
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID du navire auquel ajouter de l'or
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [newCrew]
+              properties:
+                newCrew:
+                  type: number
+      responses:
+        '200':
+          description: Équipage mis à jour
+
   /ships/ajouterOr/{idBateau}:
     post:
       summary: Ajouter de l'or à un navire

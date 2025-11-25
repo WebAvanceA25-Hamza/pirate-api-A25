@@ -207,4 +207,16 @@ export class ShipService {
       throw error; // relance l'erreur capturée
     }
   }
+      async RetirerEquipage (idbateau:string, nombreEquipage:number): Promise<void>{
+      try {
+          const ship = await shipRepository.findById(idbateau);
+        if (!ship) {
+          throw new AppError("Ship not found", { statusCode: 404, code: "VALIDATION_ERROR", details: "Ship not found", isOperational: true });
+        }
+        ship.crewSize -= nombreEquipage;        
+        await shipRepository.RetirerEquipage(idbateau,ship.crewSize);}
+      catch {
+        throw new AppError("Ship not found", { statusCode: 404, code: "VALIDATION_ERROR", details: "Ship not found", isOperational: true });
+      }
+    }
 }
