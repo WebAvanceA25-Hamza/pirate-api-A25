@@ -240,4 +240,51 @@ export class ShipService {
         throw new AppError("ship error", { statusCode: 404, code: "VALIDATION_ERROR", details: "Ship not found", isOperational: true });
       }
     }
+     async transferGoldBetweenShips(
+  amount: number,
+  idBateauEnvoyeur: string,
+  idBateauRecepteur: string
+): Promise<void> {
+  const shipSender = await shipRepository.findById(idBateauEnvoyeur);
+  const shipReceiver = await shipRepository.findById(idBateauRecepteur);
+  // ✅ Vérifications de base
+  if (!shipSender) {
+    throw new AppError("Sender ship not found", {
+      statusCode: 404,
+      code: "VALIDATION_ERROR",
+      details: "Sender ship not found",
+      isOperational: true
+    });
+  }
+
+  if (!shipReceiver) {
+    throw new AppError("Receiver ship not found", {
+      statusCode: 404,
+      code: "VALIDATION_ERROR",
+      details: "Receiver ship not found",
+      isOperational: true
+    });
+  }
+
+  if (shipSender.goldCargo < amount) {
+    throw new AppError("Not enough gold in sender ship", {
+      statusCode: 400,
+      code: "VALIDATION_ERROR",
+      details: "Not enough gold in sender ship",
+      isOperational: true
+    });
+  }
+
+  // 💰 Calcul des nouvelles valeurs
+  const newSenderGold = shipSender.goldCargo - amount;
+  const newReceiverGold = shipReceiver.goldCargo + amount;
+
+  // ⚙️ On appelle le repository pour faire la transaction SQL
+  await shipRepository.transferGoldTransactional(
+    idBateauEnvoyeur,
+    idBateauRecepteur,
+    newSenderGold,
+    newReceiverGold
+  );
+}
 }

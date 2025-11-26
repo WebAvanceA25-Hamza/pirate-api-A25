@@ -18,6 +18,8 @@ export const shipRouter = (): Router => {
   router.post("/retirerOr/:idBateau", authenticate, shipController.retirerOr);
   router.post("/retirerEquipage/:idBateau", authenticate, shipController.RetirerEquipage);
   router.post("/ajouterEquipage/:idBateau", authenticate, shipController.AjouterEquipage);
+  router.post("/transferGold/:fromShipId/:toShipId",authenticate,shipController.transferGold);
+
   return router;
 }
 

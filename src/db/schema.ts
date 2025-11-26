@@ -17,6 +17,7 @@ export const ships = mysqlTable('ships', {
   status: mysqlEnum('status', ['docked', 'sailing', 'lookingForAFight']).notNull(),
   crewSize: int('crew_size').notNull(),
   createdBy: varchar('created_by', { length: 38 }).notNull(),
+  timesPillaged: int('times_pillaged').default(0).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().onUpdateNow().notNull(),
 })

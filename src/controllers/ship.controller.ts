@@ -138,4 +138,14 @@ export class ShipController {
     }
 
       }
+         transferGold=async(req: Request, res: Response)=> {
+  try {
+  const { amount } = req.body;
+  const { fromShipId, toShipId } = req.params;
+    await shipService.transferGoldBetweenShips(Number(amount), fromShipId, toShipId);
+    res.json({ message: 'Transfert réussi entre les deux navires ! ⚓' });
+  } catch (err: any) {
+    res.status(err.statusCode || 500).json({ error: err.message });
+  }
+}
 }

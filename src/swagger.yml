@@ -370,7 +370,38 @@ paths:
         '200':
           description: Navire reçu
 
-  
+  /ships/transferGold/{fromShipId}/{toShipId}:
+    post:
+      summary: Transférer de l'or entre deux navires
+      tags: [Ships]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: toShipId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID du navire auquel ajouter de l'or
+        - name: fromShipId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID du navire auquel ajouter de l'or
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amount]
+              properties:
+                amount:
+                  type: number
+      responses:
+        '200':
+          description: Transfert d'or réussi
 
   /ships/retirerEquipage/{idBateau}:
     post:
