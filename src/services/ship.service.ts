@@ -274,11 +274,12 @@ export class ShipService {
       isOperational: true
     });
   }
-
+console.log("Amount to transfer:", amount);
   // 💰 Calcul des nouvelles valeurs
   const newSenderGold = shipSender.goldCargo - amount;
   const newReceiverGold = shipReceiver.goldCargo + amount;
-
+console.log("New sender gold:", newSenderGold);
+console.log("New receiver gold:", newReceiverGold);
   // ⚙️ On appelle le repository pour faire la transaction SQL
   await shipRepository.transferGoldTransactional(
     idBateauEnvoyeur,

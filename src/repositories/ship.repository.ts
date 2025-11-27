@@ -10,7 +10,9 @@ import { Connection } from 'mysql2/promise';
 // Map pour signaler qu'un navire a été impliqué dans une transaction qui
 // a échoué à cause d'un verrou concurrentiel (timeout).
 // Clé: ID du navire | Valeur: Date d'enregistrement du conflit (en ms)
-const activeConflictMap: { [shipId: string]: number } = {};
+//const activeConflictMap: { [shipId: string]: number } = {};
+const activeConflictMap: { [shipId: string]: string } = {};
+
 export class ShipRepository {
   async findById(id: string): Promise<Ship | null> {
     const result = await db.select().from(ships).where(eq(ships.id, id));
@@ -81,13 +83,119 @@ export class ShipRepository {
   async RetirerEquipage(idbateau: string, nombreEquipage: number): Promise<void> {
     await db.update(ships).set({ crewSize: nombreEquipage }).where(eq(ships.id, idbateau));
   }
-   async AjouterEquipage(idbateau: string, nombreEquipage: number): Promise<void> {
-    console.log("Updating crewSize for ship ID:", idbateau, "to:", nombreEquipage);
-    await db.update(ships).set({ crewSize: nombreEquipage }).where(eq(ships.id, idbateau));
-  }
+
+async transferGoldTransactional(
+idSender: string,
+idReceiver: string,
+newSenderGold: number,
+newReceiverGold: number
+): Promise<void> {
+const txId = `${Date.now()}-${Math.random()}`;
+const involvedIds = [idSender, idReceiver];
+let client: Connection | null = null;
+let acquiredLogicalLocks: string[] = []; 
+try {
+console.log(`🔹 Transaction ${txId} démarrée: ${idSender} -> ${idReceiver}`);
+console.log(`   Nouveau sender gold: ${newSenderGold}, Nouveau receiver gold: ${newReceiverGold}`);
+// ===== ÉTAPE 1 : VÉRIFIER ET ACQUÉRIR LES VERROUS LOGIQUES =====
+// Tri pour prévenir les deadlocks.
+const sortedIds = involvedIds.sort();
+for (const shipId of sortedIds) {
+const existingTx = activeConflictMap[shipId];
+if (existingTx && existingTx !== txId) {
+// 🔑 Conflit : Forcer l'échec de l'autre transaction (Abandon Mutuel).
+activeConflictMap[shipId] = "COMPROMISED"; 
+console.log(`⚠️ CONFLIT: Navire ${shipId} déjà utilisé par tx ${existingTx}`);
+console.log(`❌ Transaction ${txId} abandonnée immédiatement. (Déclenchement d'abandon pour tx ${existingTx})`);
+throw new Error('CONFLICT: Another transaction is using this ship. Both transactions abandoned.');
+}
+activeConflictMap[shipId] = txId;
+// Enregistrer le verrou acquis pour un nettoyage garanti.
+acquiredLogicalLocks.push(shipId); 
+console.log(`🔒 Navire ${shipId} réservé pour tx ${txId}`);
+}
+console.log(`✅ Tous les verrous logiques acquis pour tx ${txId}`);
+console.log(`🗺️ activeConflictMap:`, JSON.stringify(activeConflictMap));
+// ===== ÉTAPE 2 : OBTENIR LA CONNEXION ET DÉMARRER LA TRANSACTION SQL =====
+client = await connection.getConnection();
+await client.beginTransaction();
+console.log(`🔹 Transaction SQL démarrée pour tx ${txId}`);
+// Verrouillage SQL des deux navires (dans l'ordre trié)
+await client.query(
+"SELECT id FROM ships WHERE id = ? FOR UPDATE",
+[sortedIds[0]]
+);
+console.log(`🔒 Verrou SQL obtenu pour ${sortedIds[0]}`);
+await client.query(
+"SELECT id FROM ships WHERE id = ? FOR UPDATE",
+[sortedIds[1]]
+);
+console.log(`🔒 Verrou SQL obtenu pour ${sortedIds[1]}`);
+// ===== ÉTAPE 3 : DÉLAI DE 3 SECONDES (SIMULATION) =====
+console.log(`⏳ Simulation d'un transfert long (3 secondes)...`);
+await new Promise(resolve => setTimeout(resolve, 3000));
+// ===== ÉTAPE 4 : VÉRIFIER SI ON A ÉTÉ MARQUÉ COMME CONFLICTUEL (POINT DE CONTRÔLE) =====
+const conflictDetected = sortedIds.some(id => {
+const currentOwner = activeConflictMap[id];
+// Le navire ne nous appartient plus (il a été marqué "COMPROMISED").
+return currentOwner !== txId; 
+});
+if (conflictDetected) {
+console.log(`❌ Conflit mutuel détecté pendant le délai pour tx ${txId}`);
+console.log(`🗺️ activeConflictMap actuelle:`, JSON.stringify(activeConflictMap));
+throw new Error('CONFLICT: Mutual conflict detected during transaction. Both transactions abandoned.');
+}
+// ===== ÉTAPE 5 : MISE À JOUR DES VALEURS =====
+console.log(`💰 Mise à jour du sender ${idSender}: ${newSenderGold}`);
+await client.query(
+"UPDATE ships SET gold_cargo = ? WHERE id = ?",
+[newSenderGold, idSender]
+);
+console.log(`💰 Mise à jour du receiver ${idReceiver}: ${newReceiverGold}`);
+await client.query(
+"UPDATE ships SET gold_cargo = ? WHERE id = ?",
+[newReceiverGold, idReceiver]
+);
+// ===== ÉTAPE 6 : COMMIT DE LA TRANSACTION =====
+await client.commit();
+console.log(`✅ Transaction ${txId} COMMIT réussie\n`);
+} catch (err: any) {
+// ===== ROLLBACK EN CAS D'ERREUR SQL OU LOGIQUE (CONFLIT) =====
+if (client) {
+await client.rollback();
+console.log(`🔄 ROLLBACK effectué pour tx ${txId}`);
+}
+// 🔑 Nettoyage du marqueur : Si cette TX (T1) a été forcée d'échouer, elle nettoie le marqueur.
+if (err.message.includes('Mutual conflict detected during transaction')) {
+involvedIds.forEach(id => {
+if (activeConflictMap[id] === "COMPROMISED") {
+delete activeConflictMap[id];
+console.log(`⚠️ Marqueur COMPROMISED libéré pour le navire ${id} par tx ${txId}`);
+}
+});
+}
+console.error(`❌ Transaction ${txId} ROLLBACK: ${err.message}\n`);
+throw err;
+} finally {
+// ===== NETTOYAGE : LIBÉRER LES VERROUS LOGIQUES DÉTENUS (ceux qui n'ont pas été compromis) =====
+acquiredLogicalLocks.forEach(id => {
+// Libérer uniquement si NOUS SOMMES toujours le propriétaire du verrou (txId).
+if (activeConflictMap[id] === txId) {
+delete activeConflictMap[id];
+console.log(`🔓 Navire ${id} libéré par tx ${txId}`);
+}
+});
+console.log(`🗺️ activeConflictMap après nettoyage:`, JSON.stringify(activeConflictMap));
+// ===== LIBÉRER LA CONNEXION =====
+if (client) {
+client.release();
+console.log(`🔌 Connexion libérée pour tx ${txId}\n`);
+}
+}
+}
  // Map globale pour enregistrer les navires impliqués dans un conflit récent.
 // Clé: ID du navire | Valeur: Date d'enregistrement du conflit (pour une éventuelle expiration)
-async transferGoldTransactional(
+/*async transferGoldTransactional(
         idSender: string,
         idReceiver: string,
         amount: number
@@ -223,88 +331,5 @@ async transferGoldTransactional(
             }
         }
     }
-}
-
-
-    // ... (Reste du code d'exécution et du catch/finally) ...
-/*
-async transferGoldTransactional(
-  idSender: string,
-  idReceiver: string,
-  newSenderGold: number,
-  newReceiverGold: number
-): Promise<void> {
-  // Connexion dédiée pour la transaction
-  const client = await connection.getConnection();
-
-  try {
-    // Timeout des verrous très court pour simuler NOWAIT (~3s max)
-    await client.query("SET SESSION innodb_lock_wait_timeout = 3");
-
-    // Démarrage de la transaction
-    await client.beginTransaction();
-
-    // Éviter les deadlocks : verrouiller toujours dans l’ordre des IDs
-    const sortedIds = [idSender, idReceiver].sort();
-    const [firstId, secondId] = sortedIds;
-
-    // 🔐 Verrouillage du premier navire
-    try {
-      await client.query(
-        "SELECT * FROM ships WHERE id = ? FOR UPDATE",
-        [firstId]
-      );
-    } catch (err) {
-      await client.rollback();
-      throw new Error("Concurrent transaction conflict: first ship is locked");
-    }
-
-    // 🔐 Verrouillage du second navire
-    try {
-      await client.query(
-        "SELECT * FROM ships WHERE id = ? FOR UPDATE",
-        [secondId]
-      );
-    } catch (err) {
-      await client.rollback();
-      throw new Error("Concurrent transaction conflict: second ship is locked");
-    }
-
-    // Vérifier que les navires existent
-    const [firstShip] = await client.query("SELECT * FROM ships WHERE id = ?", [idSender]);
-    const [secondShip] = await client.query("SELECT * FROM ships WHERE id = ?", [idReceiver]);
-    if (!Array.isArray(firstShip) || firstShip.length === 0 || !Array.isArray(secondShip) || secondShip.length === 0) {
-      await client.rollback();
-      throw new Error("Ship not found during transaction");
-    }
-
-    // ⏳ Simuler un transfert long (3 secondes)
-    await new Promise((resolve) => setTimeout(resolve, 3000));
-
-    // 💰 Mise à jour de l'or des deux navires
-    await client.query(
-      "UPDATE ships SET gold_cargo = ? WHERE id = ?",
-      [newSenderGold, idSender]
-    );
-
-    await client.query(
-      "UPDATE ships SET gold_cargo = ? WHERE id = ?",
-      [newReceiverGold, idReceiver]
-    );
-
-    // ✅ Commit de la transaction
-    await client.commit();
-    console.log("✅ Transaction terminée avec succès");
-
-  } catch (err) {
-    // ❌ Rollback en cas d’erreur
-    await client.rollback();
-    console.error("❌ Transaction annulée :", (err as Error).message);
-    throw err;
-  } finally {
-    // Libération de la connexion
-    client.release();
-  }
-}
 */
-
+}
