@@ -8,9 +8,7 @@ export interface Ship {
   createdBy: string;
   createdAt: Date;
   updatedAt: Date;
-}
-export interface Shiplooted {
-  lootednumber: number;
+  timesPillaged: number;
 }
 
 export interface CreateShipRequest {
