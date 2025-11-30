@@ -142,6 +142,7 @@ export class ShipController {
   try {
   const { amount } = req.body;
   const { fromShipId, toShipId } = req.params;
+  console.log("Transfer Gold Request:", { amount, fromShipId, toShipId });
     await shipService.transferGoldBetweenShips(Number(amount), fromShipId, toShipId);
     res.json({ message: 'Transfert réussi entre les deux navires ! ⚓' });
   } catch (err: any) {
