@@ -13,12 +13,12 @@ export const shipRouter = (): Router => {
   router.delete("/:id", authenticateAdmin, shipController.deleteShip);
   router.delete("/", authenticateAdmin, shipController.deleteAllShips);
   router.get("/send/userlist", authenticate, shipController.listBrokerUsers);
-  router.post("/send/:recipient", authenticateAdmin, shipController.sendShip);
+  router.post("/send/:recipient", authenticate, shipController.sendShip);
   router.post("/ajouterOr/:idBateau", authenticate, shipController.AjouterOr);
   router.post("/retirerOr/:idBateau", authenticate, shipController.retirerOr);
   router.post("/retirerEquipage/:idBateau", authenticate, shipController.RetirerEquipage);
   router.post("/ajouterEquipage/:idBateau", authenticate, shipController.AjouterEquipage);
-  router.post("/transferGold/:fromShipId/:toShipId",authenticate,shipController.transferGold);
+  router.post("/transferGold/:fromShipId/:toShipId",authenticateAdmin,shipController.transferGold);
 
   return router;
 }
