@@ -139,13 +139,13 @@ throw new Error('CONFLICT: Mutual conflict detected during transaction. Both tra
 }
 console.log(` Mise à jour du sender ${idSender}: ${newSenderGold}`);
 await client.query(
-"UPDATE ships SET gold_cargo = ? WHERE id = ?",
-[newSenderGold, idSender]
+    "UPDATE ships SET gold_cargo = ?, times_pillaged = times_pillaged + 1 WHERE id = ?",
+    [newSenderGold, idSender]
 );
 console.log(` Mise à jour du receiver ${idReceiver}: ${newReceiverGold}`);
 await client.query(
-"UPDATE ships SET gold_cargo = ? WHERE id = ?",
-[newReceiverGold, idReceiver]
+    "UPDATE ships SET gold_cargo = ?, times_pillaged = times_pillaged + 1 WHERE id = ?",
+  [newReceiverGold, idReceiver]
 );
 await client.commit();
 console.log(`✅ Transaction ${txId} COMMIT réussie\n`);
