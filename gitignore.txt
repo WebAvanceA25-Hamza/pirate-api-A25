@@ -1,0 +1,10 @@
+# Fichiers et dossiers generes par Node/NPM
+/node_modules
+/dist
+/build
+npm-debug.log*
+
+# Secrets et fichiers d'environnement
+.env
+.env.*
+
