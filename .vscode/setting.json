@@ -1,0 +1,16 @@
+{
+  "editor.formatOnSave": true,
+  "editor.tabSize": 2,
+  "rest-client.environmentVariables": {
+    "$shared": { "apiKey": "" },
+    "local": {
+        "baseUrl": "https://hamza.alain.lab.edwrdl.ca:3001/api",
+        "token": "",
+        "shipId": "0f7c4775-a6ad-405b-a4a0-1c77886eb890",
+        "recipient": "yany",
+        "clientId": "hamza",
+        "BROKER_CLIENT_SECRET": "...",
+        "BROKER_CLIENT_ID": "..."
+    }
+  }
+}
