@@ -113,7 +113,8 @@ PORT=2223
 JWT_SECRET=secretTexte123
 NODE_ENV=development
 
-baseUrl=https://alaindube.com:2223/api
+BASE_URL=https://alaindube.com:2223/api
+BROKER_URL=https://pwa-broker-pirates-2bc1349418b0.herokuapp.com/api
 
 BROKER_CLIENT_SECRET=86cb073d0432640662eb6d3af9e3bc825ed34852abfd158483e293be22bee13e
 BROKER_CLIENT_ID=app_e8b1de42eb39c53f09e6783a18e1a5a7
@@ -190,3 +191,9 @@ Référence:
 
 ## L'API devrait maintenant être accessible à :
 [https://localhost:port/swagger]
+
+## Contributeurs / Rôles
+
+- Alain Duberdl : Administrateur , son rôle est de valider les branches avant   
+  de commit
+-Hamza Mahjoubi: développeur , son rôle créer des brancehs et de dévelopepr
