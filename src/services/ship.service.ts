@@ -60,7 +60,7 @@ export class ShipService {
   // ChatGPT sur comment utiliser Axios
 
   async getBrokerUsers(): Promise<Array<string>> {
-const url = `${process.env.BROKER_URL}users`;
+const url = `${process.env.BROKER_URL}/users`;
 
     try {
       const response = await axios.get<{ success: boolean; users: string[]; totalUsers: number; }>(
@@ -111,7 +111,7 @@ const url = `${process.env.BROKER_URL}users`;
     }
 
 
-const url = `${process.env.BROKER_URL}ship/sail/${recipientName}`;
+const url = `${process.env.BROKER_URL}/ship/sail/${recipientName}`;
     const data = {
       "name": ship.name,
       "goldCargo": ship.goldCargo,
