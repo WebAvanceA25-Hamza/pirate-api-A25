@@ -74,7 +74,6 @@ export class ShipRepository {
     await db.delete(ships);
   }
    async AjouterOr(idbateau: string, goldBateau: number): Promise<void> {
-    console.log("Updating goldCargo for ship ID:", idbateau, "to:", goldBateau);
     await db.update(ships).set({ goldCargo: goldBateau }).where(eq(ships.id, idbateau));
   }
   async retirerOr(idbateau: string, goldBateau: number): Promise<void> {
@@ -83,6 +82,19 @@ export class ShipRepository {
   async RetirerEquipage(idbateau: string, nombreEquipage: number): Promise<void> {
     await db.update(ships).set({ crewSize: nombreEquipage }).where(eq(ships.id, idbateau));
   }
+
+/*Cette méthode est générée par l'IA , mais je l'ai comprise.voci explication:
+Cette méthode effectue un transfert d’or entre deux bateaux. On commence par créer un identifiant unique (txId) 
+pour chaque transaction, puis on définit involvedIds avec les deux bateaux concernés. Ensuite, on établit la connexion
+à la base de données et on trie les IDs des bateaux pour que toutes les transactions verrouillent les bateaux dans le même ordre,
+ ce qui évite les deadlocks, c’est-à-dire les situations où deux transactions se bloqueraient mutuellement en essayant de prendre
+  les mêmes verrous. On utilise ensuite activeConflictMap pour appliquer des verrous logiques côté application sur chaque bateau,
+   afin de détecter et gérer les conflits avant même d’accéder à la base. Si aucun conflit n’est détecté, on passe à la transaction
+    SQL en verrouillant les lignes correspondantes avec SELECT ... FOR UPDATE. Pendant le traitement, on vérifie encore l’apparition
+     de conflits avec conflictDetected, et si un conflit survient, la transaction est abandonnée. En cas de succès, l’or et le compteur
+      de pillage sont mis à jour, et en cas d’erreur, un rollback restaure l’état initial. Enfin, les verrous logiques sont libérés
+   dans activeConflictMap, permettant à d’autres transactions d’utiliser ces bateaux. 
+*/
 
 async transferGoldTransactional(
 idSender: string,
@@ -95,91 +107,67 @@ const involvedIds = [idSender, idReceiver];
 let client: Connection | null = null;
 let acquiredLogicalLocks: string[] = []; 
 try {
-console.log(`🔹 Transaction ${txId} démarrée: ${idSender} -> ${idReceiver}`);
-console.log(`   Nouveau sender gold: ${newSenderGold}, Nouveau receiver gold: ${newReceiverGold}`);
-
 const sortedIds = involvedIds.sort();
 for (const shipId of sortedIds) {
 const existingTx = activeConflictMap[shipId];
 if (existingTx && existingTx !== txId) {
 activeConflictMap[shipId] = "COMPROMISED"; 
-console.log(`⚠️ CONFLIT: Navire ${shipId} déjà utilisé par tx ${existingTx}`);
-console.log(`❌ Transaction ${txId} abandonnée immédiatement. (Déclenchement d'abandon pour tx ${existingTx})`);
 throw new Error('CONFLICT: Another transaction is using this ship. Both transactions abandoned.');
 }
 activeConflictMap[shipId] = txId;
 acquiredLogicalLocks.push(shipId); 
-console.log(`🔒 Navire ${shipId} réservé pour tx ${txId}`);
 }
-console.log(`✅ Tous les verrous logiques acquis pour tx ${txId}`);
-console.log(`🗺️ activeConflictMap:`, JSON.stringify(activeConflictMap));
 client = await connection.getConnection();
 await client.beginTransaction();
-console.log(`🔹 Transaction SQL démarrée pour tx ${txId}`);
 await client.query(
 "SELECT id FROM ships WHERE id = ? FOR UPDATE",
 [sortedIds[0]]
 );
-console.log(`🔒 Verrou SQL obtenu pour ${sortedIds[0]}`);
 await client.query(
 "SELECT id FROM ships WHERE id = ? FOR UPDATE",
 [sortedIds[1]]
 );
-console.log(`🔒 Verrou SQL obtenu pour ${sortedIds[1]}`);
-console.log(`⏳ Simulation d'un transfert long (3 secondes)...`);
 await new Promise(resolve => setTimeout(resolve, 3000));
 const conflictDetected = sortedIds.some(id => {
 const currentOwner = activeConflictMap[id];
 return currentOwner !== txId; 
 });
 if (conflictDetected) {
-console.log(`❌ Conflit mutuel détecté pendant le délai pour tx ${txId}`);
-console.log(`🗺️ activeConflictMap actuelle:`, JSON.stringify(activeConflictMap));
 throw new Error('CONFLICT: Mutual conflict detected during transaction. Both transactions abandoned.');
 }
-console.log(` Mise à jour du sender ${idSender}: ${newSenderGold}`);
 await client.query(
     "UPDATE ships SET gold_cargo = ?, times_pillaged = times_pillaged + 1 WHERE id = ?",
     [newSenderGold, idSender]
 );
-console.log(` Mise à jour du receiver ${idReceiver}: ${newReceiverGold}`);
 await client.query(
     "UPDATE ships SET gold_cargo = ? WHERE id = ?",
     [newReceiverGold, idReceiver]
 );
 await client.commit();
-console.log(`✅ Transaction ${txId} COMMIT réussie\n`);
 } catch (err: any) {
 if (client) {
 await client.rollback();
-console.log(`🔄 ROLLBACK effectué pour tx ${txId}`);
 }
 if (err.message.includes('Mutual conflict detected during transaction')) {
 involvedIds.forEach(id => {
 if (activeConflictMap[id] === "COMPROMISED") {
 delete activeConflictMap[id];
-console.log(`⚠️ Marqueur COMPROMISED libéré pour le navire ${id} par tx ${txId}`);
 }
 });
 }
-console.error(`❌ Transaction ${txId} ROLLBACK: ${err.message}\n`);
 throw err;
 } finally {
 acquiredLogicalLocks.forEach(id => {
 if (activeConflictMap[id] === txId) {
 delete activeConflictMap[id];
-console.log(`🔓 Navire ${id} libéré par tx ${txId}`);
 }
 });
-console.log(`🗺️ activeConflictMap après nettoyage:`, JSON.stringify(activeConflictMap));
 if (client) {
 client.release();
-console.log(`🔌 Connexion libérée pour tx ${txId}\n`);
 }
 }
 }
- async AjouterEquipage(idbateau: string, nombreEquipage: number): Promise<void> {
-    console.log("Updating crewSize for ship ID:", idbateau, "to:", nombreEquipage);
+ async ajouterEquipage(idbateau: string, nombreEquipage: number): Promise<void> {
     await db.update(ships).set({ crewSize: nombreEquipage }).where(eq(ships.id, idbateau));
   }
 }

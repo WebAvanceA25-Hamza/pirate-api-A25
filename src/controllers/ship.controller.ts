@@ -25,12 +25,6 @@ export class ShipController {
       if ((req.headers["authorization"] === undefined || req.headers["authorization"].split(" ")[1] != process.env.BROKER_CLIENT_SECRET)
         && (req.headers["x-client-id"] === undefined || req.headers["x-client-id"] != process.env.BROKER_CLIENT_ID)) {
 
-        //console.log("Error on createReceivedShip");
-        //console.log("Missing data(s)!");
-        //console.log("req.headers[authorization]", req.headers["authorization"])
-        //console.log("req.headers[x - client - id]", req.headers["x-client-id"]);
-
-
         throw new AppError("Unauthorized", { statusCode: 401, code: "AUTH_REQUIRED", details: "You need to be logged in to access this resource." });
       }
       const newShip = await shipService.createReceivedShip(ship);
@@ -103,11 +97,9 @@ export class ShipController {
       next(error);
     }
   }
-   AjouterOr = async (req: Request, res: Response, next: NextFunction) => {
+   ajouterOr = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      console.log("req.body.Or dans controller :", req.body.Or);
-      console.log("req.params.idBateau dans controller :", req.params.idBateau);
-      await shipService.AjouterOr(req.body.Or, req.params.idBateau);
+      await shipService.ajouterOr(req.body.Or, req.params.idBateau);
       res.status(204).send();
     } catch (error) {
       next(error);
@@ -121,28 +113,27 @@ export class ShipController {
       next(error);
     }
   }
-   RetirerEquipage= async (req: Request, res: Response, next: NextFunction) => {
+   retirerEquipage= async (req: Request, res: Response, next: NextFunction) => {
      try {
-       await shipService.RetirerEquipage(req.params.idBateau, Number(req.body.newCrew));
+       await shipService.retirerEquipage(req.params.idBateau, Number(req.body.newCrew));
        res.status(204).send();
     } catch (error) {
       next(error);
     }
   }
-     AjouterEquipage= async (req: Request, res: Response, next: NextFunction) => {
+     ajouterEquipage= async (req: Request, res: Response, next: NextFunction) => {
      try {
-       await shipService.AjouterEquipage(req.params.idBateau, req.body.newCrew);
+       await shipService.ajouterEquipage(req.params.idBateau, req.body.newCrew);
        res.status(204).send();
     } catch (error) {
       next(error);
     }
 
       }
-         transferGold=async(req: Request, res: Response)=> {
+ transferGold=async(req: Request, res: Response)=> {
   try {
   const { amount } = req.body;
   const { fromShipId, toShipId } = req.params;
-  console.log("Transfer Gold Request:", { amount, fromShipId, toShipId });
     await shipService.transferGoldBetweenShips(Number(amount), fromShipId, toShipId);
     res.json({ message: 'Transfert réussi entre les deux navires ! ⚓' });
   } catch (err: any) {

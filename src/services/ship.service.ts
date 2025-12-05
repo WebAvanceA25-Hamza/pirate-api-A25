@@ -60,7 +60,7 @@ export class ShipService {
   // ChatGPT sur comment utiliser Axios
 
   async getBrokerUsers(): Promise<Array<string>> {
-    const url = "https://pwa-broker-pirates-2bc1349418b0.herokuapp.com/api/users";
+const url = `${process.env.BROKER_URL}users`;
 
     try {
       const response = await axios.get<{ success: boolean; users: string[]; totalUsers: number; }>(
@@ -110,7 +110,8 @@ export class ShipService {
       throw new AppError("Failed sending ship", { statusCode: 400, code: "VALIDATION_ERROR", isOperational: true })
     }
 
-    const url = "https://pwa-broker-pirates-2bc1349418b0.herokuapp.com/api/ship/sail/" + recipientName;
+
+const url = `${process.env.BROKER_URL}ship/sail/${recipientName}`;
     const data = {
       "name": ship.name,
       "goldCargo": ship.goldCargo,
@@ -140,24 +141,16 @@ export class ShipService {
         throw new AppError("Failed sending ship", { statusCode: 400, code: "REMOTE_SERVICE_ERROR", isOperational: true })
       }
     }
-
-
     if (!response.data.success) {
       await shipRepository.editById(shipId, ship, "docked");
       throw new AppError("Failed sending ship", { statusCode: 400, code: "REMOTE_SERVICE_ERROR", isOperational: true, details: response.data.message });
     }
-
     await shipRepository.deleteById(ship.id);
   }
-   async AjouterOr(amount: number, idbateau: string): Promise<void> {
+   async ajouterOr(amount: number, idbateau: string): Promise<void> {
     try {
-      console.log("amount dans AjouterOr service :", amount);
-      console.log("idbateau dans AjouterOr service :", idbateau);
 
       const ship = await shipRepository.findById(idbateau);
-      console.log("ship trouvé :", ship);
-    console.log("goldCargo actuel du ship :", ship?.goldCargo);
-
       if (!ship) {
         throw new AppError("Ship not found", {
           statusCode: 404,
@@ -166,11 +159,7 @@ export class ShipService {
           isOperational: true,
         });
       }
-
-
       ship.goldCargo += amount;
-    console.log("goldCargo actuel du ship :", ship?.goldCargo);
-
       await shipRepository.AjouterOr(idbateau, ship.goldCargo);
     } catch (error) {
       console.error("Erreur dans AjouterOr :", error);
@@ -179,12 +168,7 @@ export class ShipService {
   }
    async retierOr(amount: number, idbateau: string): Promise<void> {
     try {
-      console.log("amount dans AjouterOr service :", amount);
-      console.log("idbateau dans AjouterOr service :", idbateau);
-
       const ship = await shipRepository.findById(idbateau);
-      console.log("ship trouvé :", ship);
-    console.log("goldCargo actuel du ship :", ship?.goldCargo);
 
       if (!ship) {
         throw new AppError("Ship not found", {
@@ -199,15 +183,13 @@ export class ShipService {
         }
 
       ship.goldCargo -= amount;
-    console.log("goldCargo actuel du ship :", ship?.goldCargo);
 
       await shipRepository.retirerOr(idbateau, ship.goldCargo);
     } catch (error) {
-      console.error("Erreur dans AjouterOr :", error);
       throw error; // relance l'erreur capturée
     }
   }
-      async RetirerEquipage (idbateau:string, nombreEquipage:number): Promise<void>{
+      async retirerEquipage (idbateau:string, nombreEquipage:number): Promise<void>{
       try {
           const ship = await shipRepository.findById(idbateau);
         if (!ship) {
@@ -219,12 +201,9 @@ export class ShipService {
         throw new AppError("Ship not found", { statusCode: 404, code: "VALIDATION_ERROR", details: "Ship not found", isOperational: true });
       }
     }
-     async AjouterEquipage(idbateau:string, nombreEquipage:number): Promise<void>{
+     async ajouterEquipage(idbateau:string, nombreEquipage:number): Promise<void>{
       try {
-        console.log("nombreEquipage dans AjouterEquipage service :", nombreEquipage);
-        console.log("idbateau dans AjouterEquipage service :", idbateau);
           const ship = await shipRepository.findById(idbateau);
-          console.log("ship trouvé :", ship);
         if (!ship) {
         throw new AppError("Ship not found", {
           statusCode: 404,
@@ -234,7 +213,7 @@ export class ShipService {
         });
       }
         ship.crewSize += nombreEquipage;        
-        await shipRepository.AjouterEquipage(idbateau,ship.crewSize);
+        await shipRepository.ajouterEquipage(idbateau,ship.crewSize);
       }
       catch {
         throw new AppError("ship error", { statusCode: 404, code: "VALIDATION_ERROR", details: "Ship not found", isOperational: true });
@@ -247,7 +226,6 @@ export class ShipService {
 ): Promise<void> {
   const shipSender = await shipRepository.findById(idBateauEnvoyeur);
   const shipReceiver = await shipRepository.findById(idBateauRecepteur);
-  // ✅ Vérifications de base
   if (!shipSender) {
     throw new AppError("Sender ship not found", {
       statusCode: 404,
@@ -274,13 +252,8 @@ export class ShipService {
       isOperational: true
     });
   }
-console.log("Amount to transfer:", amount);
-  // 💰 Calcul des nouvelles valeurs
   const newSenderGold = shipSender.goldCargo - amount;
   const newReceiverGold = shipReceiver.goldCargo + amount;
-console.log("New sender gold:", newSenderGold);
-console.log("New receiver gold:", newReceiverGold);
-  // ⚙️ On appelle le repository pour faire la transaction SQL
   await shipRepository.transferGoldTransactional(
     idBateauEnvoyeur,
     idBateauRecepteur,
