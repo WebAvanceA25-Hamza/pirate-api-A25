@@ -117,6 +117,7 @@ baseUrl=https://alaindube.com:2223/api
 
 BROKER_CLIENT_SECRET=86cb073d0432640662eb6d3af9e3bc825ed34852abfd158483e293be22bee13e
 BROKER_CLIENT_ID=app_e8b1de42eb39c53f09e6783a18e1a5a7
+BROKER_URL=https://pwa-broker-pirates-2bc1349418b0.herokuapp.com/api
 ```
 
 ---
@@ -190,3 +191,11 @@ Référence:
 
 ## L'API devrait maintenant être accessible à :
 [https://localhost:port/swagger]
+
+
+## Contributeur
+-Contributeur : Alain
+-Role:admin
+
+-Contributeur : hamza
+-Role:Développeur

@@ -160,7 +160,7 @@ const url = `${process.env.BROKER_URL}ship/sail/${recipientName}`;
         });
       }
       ship.goldCargo += amount;
-      await shipRepository.AjouterOr(idbateau, ship.goldCargo);
+      await shipRepository.ajouterOr(idbateau, ship.goldCargo);
     } catch (error) {
       console.error("Erreur dans AjouterOr :", error);
       throw error; // relance l'erreur capturée
@@ -196,7 +196,7 @@ const url = `${process.env.BROKER_URL}ship/sail/${recipientName}`;
           throw new AppError("Ship not found", { statusCode: 404, code: "VALIDATION_ERROR", details: "Ship not found", isOperational: true });
         }
         ship.crewSize -= nombreEquipage;        
-        await shipRepository.RetirerEquipage(idbateau,ship.crewSize);}
+        await shipRepository.retirerEquipage(idbateau,ship.crewSize);}
       catch {
         throw new AppError("Ship not found", { statusCode: 404, code: "VALIDATION_ERROR", details: "Ship not found", isOperational: true });
       }

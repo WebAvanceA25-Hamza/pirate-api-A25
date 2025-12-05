@@ -73,13 +73,13 @@ export class ShipRepository {
   async deleteAll(): Promise<void> {
     await db.delete(ships);
   }
-   async AjouterOr(idbateau: string, goldBateau: number): Promise<void> {
+   async ajouterOr(idbateau: string, goldBateau: number): Promise<void> {
     await db.update(ships).set({ goldCargo: goldBateau }).where(eq(ships.id, idbateau));
   }
   async retirerOr(idbateau: string, goldBateau: number): Promise<void> {
     await db.update(ships).set({ goldCargo: goldBateau }).where(eq(ships.id, idbateau));
   }
-  async RetirerEquipage(idbateau: string, nombreEquipage: number): Promise<void> {
+  async retirerEquipage(idbateau: string, nombreEquipage: number): Promise<void> {
     await db.update(ships).set({ crewSize: nombreEquipage }).where(eq(ships.id, idbateau));
   }
 
