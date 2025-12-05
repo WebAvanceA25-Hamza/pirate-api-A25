@@ -16,8 +16,8 @@ export const shipRouter = (): Router => {
   router.post("/send/:recipient", authenticate, shipController.sendShip);
   router.post("/ajouterOr/:idBateau", authenticate, shipController.ajouterOr);
   router.post("/retirerOr/:idBateau", authenticate, shipController.retirerOr);
-  router.post("/retirerEquipage/:idBateau", authenticate, shipController.RetirerEquipage);
-  router.post("/ajouterEquipage/:idBateau", authenticate, shipController.AjouterEquipage);
+  router.post("/retirerEquipage/:idBateau", authenticate, shipController.retirerEquipage);
+  router.post("/ajouterEquipage/:idBateau", authenticate, shipController.ajouterEquipage);
   router.post("/transferGold/:fromShipId/:toShipId",authenticateAdmin,shipController.transferGold);
 
   return router;
