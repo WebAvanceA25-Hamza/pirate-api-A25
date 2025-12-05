@@ -1,0 +1,16 @@
+{
+  "rest-client.environmentVariables": {
+    "$shared": {
+      "apiKey": "1234567890abcdef"
+    },
+    "local": {
+      "baseUrl": "https://pwa-broker-pirates-2bc1349418b0.herokuapp.com/api/",
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",
+      "shipId": "ship_001",
+      "recipient": "captain_jack",
+      "clientId": "client_12345",
+      "BROKER_CLIENT_SECRET": "s3cr3tK3y!",
+      "BROKER_CLIENT_ID": "broker_client_001"
+    }
+  }
+}
