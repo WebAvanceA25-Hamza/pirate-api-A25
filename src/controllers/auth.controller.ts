@@ -24,7 +24,15 @@ export class AuthController {
       next(error);
     }
   }
-
+  setAdmin = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { username } = req.params;
+      await authService.setAdmin(username);
+      res.status(200).json({ message: `User ${username} is now an admin.` });
+    } catch (error) {
+      next(error);
+    }
+  }
   login = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { username, password } = req.body as LoginUserRequest;
