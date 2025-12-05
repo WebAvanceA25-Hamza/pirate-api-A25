@@ -4,7 +4,7 @@ info:
   version: 1.0.0
 
 servers:
-  - url: https://hamza.alain.lab.edwrdl.ca/:3001/api
+  - url: https://hamza.alain.lab.edwrdl.ca/api
 
 paths:
   /ping:
