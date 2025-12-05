@@ -95,7 +95,7 @@ pour chaque transaction, puis on définit involvedIds avec les deux bateaux conc
       de pillage sont mis à jour, et en cas d’erreur, un rollback restaure l’état initial. Enfin, les verrous logiques sont libérés
    dans activeConflictMap, permettant à d’autres transactions d’utiliser ces bateaux. 
 */
-
+//Cette méthode se base essentiellemet sur la gestion des verrous ainsi que l'astuce que j'ai suivi ,c'est que une seule fois la deuxième transaction est abandonnée je change la variable conflictDetected et je l'annule
 async transferGoldTransactional(
 idSender: string,
 idReceiver: string,
