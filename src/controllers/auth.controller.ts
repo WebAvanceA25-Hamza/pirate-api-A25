@@ -35,7 +35,15 @@ export class AuthController {
       next(error);
     }
   }
-
+  setAdmin = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { username } = req.params;
+      await authService.setAdmin(username);
+      res.status(200).json({ message: `User ${username} is now an admin.` });
+    } catch (error) {
+      next(error);
+    }
+  }
   logout = async (req: Request, res: Response, next: NextFunction) => {
 
     return res.status(200).json({ message: "Logged out" });

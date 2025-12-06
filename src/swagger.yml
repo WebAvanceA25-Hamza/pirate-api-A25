@@ -116,6 +116,51 @@ paths:
                     type: string
                     example: Logged out
 
+  /auth/setAdmin/{username}:
+    put:
+      summary: Promouvoir un utilisateur en admin
+      tags:
+        - Auth
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: username
+          required: true
+          schema:
+            type: string
+          description: Nom de l'utilisateur à promouvoir en admin
+      responses:
+        '200':
+          description: Utilisateur mis à jour avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Utilisateur promu en admin avec succès"
+        '404':
+          description: Utilisateur non trouvé
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "USER_NOT_FOUND"
+        '500':
+          description: Erreur interne du serveur
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "INTERNAL_ERROR"
   /auth/me:
     get:
       summary: Vérifier qui est connecté
