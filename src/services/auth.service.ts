@@ -16,7 +16,13 @@ export class AuthService {
   async getUserByUsername(username: string): Promise<User | null> {
     return authRepository.findByUsername(username);
   }
-
+  async setAdmin (username: string): Promise<void>  {
+    const user = await authRepository.findByUsername(username);
+    if (!user) {
+      throw new AppError("User not found", { statusCode: 404, code: "USER_NOT_FOUND", details: `No user found with username ${username}` });
+    }
+    await authRepository.updateUserRole(username);
+  }
   async createUser(user: RegisterUserRequest): Promise<User> {
     if (user.username.length > 50) {
       throw new AppError("Invalid username length", { statusCode: 400, code: "VALIDATION_ERROR", details: "Username must be less than 50 characters long" });

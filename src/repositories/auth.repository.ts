@@ -13,7 +13,9 @@ export class AuthRepository {
     const result = await db.select().from(users).where(eq(users.username, username));
     return result[0] || null;
   }
-
+  updateUserRole = async (username: string): Promise<void> => {
+    await db.update(users).set({ isAdmin: true}).where(eq(users.username, username));
+  }
   async create(user: { id: string; username: string; passwordHash: string }): Promise<User> {
     await db.insert(users).values(user);
 
